@@ -6,20 +6,59 @@
 //  Copyright © 2020 BDKid. All rights reserved.
 //
 
-#import "AppDelegate.h"
+#import "AppDelegate.h" 
+#import <mach/mach.h>
+#include <execinfo.h>
+
+
 
 @interface AppDelegate ()
 
 @end
 
 @implementation AppDelegate
+@synthesize window = _window;
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+    
+      if (@available(iOS 13, *)) {
+          
+      }else{
+          _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen]bounds]];
+          _window.rootViewController = [[SwiftViewController alloc] init];
+          [_window makeKeyAndVisible];
+
+      }
+//    registerSignalHandler();
+    NSSetUncaughtExceptionHandler(registerSignalHandler);
+
     return YES;
 }
 
+void registerSignalHandler(void) {
+    signal(SIGSEGV, handleSignalException);
+    signal(SIGFPE, handleSignalException);
+    signal(SIGBUS, handleSignalException);
+    signal(SIGPIPE, handleSignalException);
+    signal(SIGHUP, handleSignalException);
+    signal(SIGINT, handleSignalException);
+    signal(SIGQUIT, handleSignalException);
+    signal(SIGABRT, handleSignalException);
+    signal(SIGILL, handleSignalException);
+    
+}
+
+void handleSignalException(int signal) {
+    NSMutableString *crashString = [[NSMutableString alloc] init];
+    void *callstack[128];
+    int i, frames = backtrace(callstack, 128);
+    char **traceChar = backtrace_symbols(callstack, frames);
+    for (i = 0; i <frames; ++i) {
+        [crashString appendFormat:@"%s\n", traceChar[i]];
+    }    NSLog(@"%@", crashString);
+    NSLog(@"crashString - %@",crashString);
+}
 
 #pragma mark - UISceneSession lifecycle
 
